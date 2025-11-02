@@ -1,5 +1,7 @@
 # Vulkan実践入門で学ぶVulkan
 
+書籍「[Vulkan実践入門](https://gihyo.jp/book/2025/978-4-297-15257-4)」をやる。
+
 ## 環境
 
 ### Windows
