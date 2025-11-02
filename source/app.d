@@ -1,5 +1,8 @@
 import bindbc.glfw;
 import bindbc.loader;
+import erupted;
+
+mixin(bindGLFW_Vulkan);
 
 void main()
 {
@@ -13,6 +16,10 @@ void main()
     assert(glfwVulkanSupported() != 0);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+	// vulkan initialization.
+	import erupted.vulkan_lib_loader : loadGlobalLevelFunctions;
+	loadGlobalLevelFunctions();
 
     auto window = glfwCreateWindow(1280, 780, "", null, null);
     assert(window !is null);
