@@ -1,8 +1,36 @@
+import std.concurrency : initOnce;
+
 import bindbc.glfw;
 import bindbc.loader;
 import erupted;
 
 mixin(bindGLFW_Vulkan);
+
+interface ISampleApp
+{
+    void onInitialize();
+    void onDrawFrame();
+    void onCleanup();
+}
+
+class TriangleApp : ISampleApp
+{
+    override void onInitialize() {}
+    override void onDrawFrame() {}
+    override void onCleanup() {}
+}
+
+static class VulkanContext
+{
+public:
+    enum MaxInflightFrames = 2;
+
+    static VulkanContext get()
+    {
+        __gshared VulkanContext instance;
+        return initOnce!instance(new VulkanContext);
+    }
+}
 
 void main()
 {
@@ -24,8 +52,17 @@ void main()
     auto window = glfwCreateWindow(1280, 780, "", null, null);
     assert(window !is null);
     scope(exit) glfwDestroyWindow(window);
+
+    auto vulkanCtx = VulkanContext.get();
+
+    auto theApp = new TriangleApp;
+    theApp.onInitialize();
+    scope(exit) theApp.onCleanup();
+
     while (glfwWindowShouldClose(window) == GLFW_FALSE)
     {
         glfwPollEvents();
+
+        theApp.onDrawFrame();
     }
 }
