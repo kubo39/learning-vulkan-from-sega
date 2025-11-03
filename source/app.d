@@ -1,10 +1,16 @@
-import std.concurrency : initOnce;
+module app;
+
+import core.thread;
+import core.time;
 
 import bindbc.glfw;
 import bindbc.loader;
 import erupted;
 
-mixin(bindGLFW_Vulkan);
+import common;
+import glfwsurfaceprovider;
+import imagebarrier;
+import vulkancontext;
 
 interface ISampleApp
 {
@@ -16,20 +22,66 @@ interface ISampleApp
 class TriangleApp : ISampleApp
 {
     override void onInitialize() {}
-    override void onDrawFrame() {}
-    override void onCleanup() {}
-}
 
-static class VulkanContext
-{
-public:
-    enum MaxInflightFrames = 2;
-
-    static VulkanContext get()
+    override void onDrawFrame()
     {
-        __gshared VulkanContext instance;
-        return initOnce!instance(new VulkanContext);
+        auto vulkanCtx = VulkanContext.get();
+        auto swapchain = vulkanCtx.getSwapchain();
+        auto device = vulkanCtx.getVkDevice();
+
+        if (vulkanCtx.acquireNextImage() != VK_SUCCESS)
+        {
+            Thread.sleep(100.msecs);
+            return;
+        }
+
+        auto frameCtx = vulkanCtx.getCurrentFrameContext();
+        auto commandBuffer = frameCtx.commandBuffer;
+        commandBuffer.begin();
+
+        // 描画前: UNDEFINED -> COLOR_ATTACHMENT_OPTIMAL
+        // VK_ATTACHMENT_LOAD_OP_CLEARを指定のため、常にUNDEFINED指定遷移で問題なし
+        VkImageSubresourceRange range = {
+            aspectMask: VK_IMAGE_ASPECT_COLOR_BIT,
+            baseMipLevel: 0,
+            levelCount: 1,
+            baseArrayLayer: 0,
+            layerCount: 1,
+        };
+
+        auto imageView = swapchain.getCurrentView();
+        auto extent = swapchain.getExtent();
+
+        VkRenderingAttachmentInfo colorAttachment = {
+            imageView: imageView,
+            imageLayout: VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            loadOp: VK_ATTACHMENT_LOAD_OP_CLEAR,
+            storeOp: VK_ATTACHMENT_STORE_OP_STORE,
+            clearValue: VkClearValue(
+                VkClearColorValue([0.6f, 0.2f, 0.3f, 1.0f])
+            ),
+        };
+        VkRenderingInfo renderingInfo = {
+            renderArea: VkRect2D(VkOffset2D(0, 0), extent),
+            layerCount: 1,
+            colorAttachmentCount: 1,
+            pColorAttachments: &colorAttachment
+        };
+        vkCmdBeginRendering(commandBuffer.get(), &renderingInfo);
+
+        vkCmdEndRendering(commandBuffer.get());
+
+        // 表示用レイアウト変更
+        commandBuffer.transitionLayout(
+            swapchain.getCurrentImage(), range,
+            ImageLayoutTransition.fromUndefinedToColorAttachment()
+        );
+        commandBuffer.end();
+
+        vulkanCtx.submitPresent();
     }
+
+    override void onCleanup() {}
 }
 
 void main()
@@ -53,7 +105,11 @@ void main()
     assert(window !is null);
     scope(exit) glfwDestroyWindow(window);
 
+    auto surfaceProvider = new GLFWSurfaceProvider(window);
+
     auto vulkanCtx = VulkanContext.get();
+    vulkanCtx.initialize("Triangle", surfaceProvider);
+    vulkanCtx.recreateSwapchain();
 
     auto theApp = new TriangleApp;
     theApp.onInitialize();
