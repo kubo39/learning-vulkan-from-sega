@@ -35,7 +35,9 @@ public:
         createInstance(appName);
         common.loadInstanceLevelFunctions(m_vkInstance);
         pickPhysicalDevice();
+        writeln("get device");
         createLogicalDevice();
+        writeln("create command pool");
         createCommandPool();
     }
 
@@ -209,7 +211,7 @@ private:
         auto queues = new VkQueueFamilyProperties[](queueCount);
         vkGetPhysicalDeviceQueueFamilyProperties(m_vkPhysicalDevice, &queueCount, queues.ptr);
 
-        m_graphicsQueueFamilyIndex = ~0;
+        m_graphicsQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         foreach (i, const ref props; queues)
         {
             if (props.queueFlags & VK_QUEUE_GRAPHICS_BIT)
@@ -240,8 +242,11 @@ private:
         deviceInfo.pNext = &m_physDevFeatures;
         deviceInfo.pEnabledFeatures = null;
 
+        writeln("vkCreateDevice");
         enforceVK(vkCreateDevice(m_vkPhysicalDevice, &deviceInfo, null, &m_vkDevice));
+        assert(m_vkDevice !is null);
 
+        writeln("vkGetDeviceQueue");
         vkGetDeviceQueue(m_vkDevice, m_graphicsQueueFamilyIndex, 0, &m_graphicsQueue);
     }
 

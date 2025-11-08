@@ -3,6 +3,8 @@ module app;
 import core.thread;
 import core.time;
 
+import std.stdio;
+
 import bindbc.glfw;
 import bindbc.loader;
 import erupted;
@@ -108,10 +110,14 @@ void main()
     auto surfaceProvider = new GLFWSurfaceProvider(window);
 
     auto vulkanCtx = VulkanContext.get();
+    scope(exit) vulkanCtx.cleanup();
+    writeln("initialize vulkan context");
     vulkanCtx.initialize("Triangle", surfaceProvider);
+    writeln("recreate swapchain");
     vulkanCtx.recreateSwapchain();
 
     auto theApp = new TriangleApp;
+    writeln("initialize app");
     theApp.onInitialize();
     scope(exit) theApp.onCleanup();
 
