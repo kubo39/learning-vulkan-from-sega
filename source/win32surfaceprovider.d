@@ -1,5 +1,8 @@
-module glfwsurfaceprovider;
+module win32surfaceprovider;
 
+version(Windows):
+
+import core.sys.windows.windows;
 import std.stdio;
 
 import bindbc.glfw;
@@ -8,9 +11,8 @@ import erupted;
 import common;
 import isurfaceprovider;
 
-class GLFWSurfaceProvider : ISurfaceProvider
+class Win32SurfaceProvider : ISurfaceProvider
 {
-public:
     this(GLFWwindow* window)
     {
         m_window = window;
@@ -18,10 +20,13 @@ public:
 
     VkSurfaceKHR createSurface(VkInstance instance)
     {
+        VkWin32SurfaceCreateInfoKHR createInfo = {
+            hinstance: GetModuleHandle(null),
+            hwnd: glfwGetWin32Window(m_window)
+        };
         VkSurfaceKHR surface;
-        writeln("get surface");
-        enforceVK(glfwCreateWindowSurface(instance, m_window, null, &surface));
-        writeln("got surface");
+        writeln("create surface");
+        enforceVK(vkCreateWin32SurfaceKHR(instance, &createInfo, null, &surface));
         return surface;
     }
 

@@ -2,6 +2,7 @@ module swapchain;
 
 import std.algorithm.comparison : max;
 import std.range : back, empty, popBack;
+import std.stdio;
 
 import erupted;
 
@@ -13,13 +14,15 @@ class Swapchain
 public:
     void recreate(uint width, uint height)
     {
+        writeln("recreate");
         auto vulkanCtx = VulkanContext.get();
         auto vkPhysicalDevice = vulkanCtx.getVkPhysicalDevice();
         auto vkDevice = vulkanCtx.getVkDevice();
         auto surface = vulkanCtx.getSurface();
 
+        writeln("get physicaldevicesurface");
         VkSurfaceCapabilitiesKHR caps;
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vkPhysicalDevice, surface, &caps);
+        enforceVK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vkPhysicalDevice, surface, &caps));
         VkExtent2D extent = caps.currentExtent;
         if (extent.width == uint.max)
         {
@@ -27,14 +30,15 @@ public:
             extent.height = height;
         }
 
+        writeln("get format");
         uint count;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(
+        enforceVK(vkGetPhysicalDeviceSurfaceFormatsKHR(
             vkPhysicalDevice, surface, &count, null
-        );
+        ));
         auto formats = new VkSurfaceFormatKHR[](count);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(
+        enforceVK(vkGetPhysicalDeviceSurfaceFormatsKHR(
             vkPhysicalDevice, surface, &count, formats.ptr
-        );
+        ));
 
         VkSurfaceFormatKHR format = formats[0];
         foreach (surfaceFormat; formats)
@@ -70,8 +74,9 @@ public:
         info.oldSwapchain = m_swapchain;
 
         // GPUがidle状態になってからswapchainの(再)作成
-        vkDeviceWaitIdle(vkDevice);
+        enforceVK(vkDeviceWaitIdle(vkDevice));
 
+        writeln("create swapchain");
         VkSwapchainKHR swapchain;
         enforceVK(vkCreateSwapchainKHR(vkDevice, &info, null, &swapchain));
 
@@ -107,6 +112,7 @@ public:
             enforceVK(vkCreateImageView(vkDevice, &imageViewCI, null, &view));
             m_imageViews ~= view;
         }
+        writeln("create frame context");
         createFrameContext();
     }
 
