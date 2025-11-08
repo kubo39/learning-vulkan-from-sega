@@ -45,16 +45,19 @@ public:
     {
         if (m_swapchain is null)
         {
+            writeln("create swapchain");
             m_swapchain = new Swapchain;
         }
 
         if (m_surface is null)
         {
+            writeln("create surface");
             createSurface();
         }
 
         auto width = m_surfaceProvider.getFrameBufferWidth();
         auto height = m_surfaceProvider.getFrameBufferHeight();
+        writeln("recreate");
         m_swapchain.recreate(width, height);
     }    
 
@@ -279,16 +282,17 @@ private:
 
     void createSurface()
     {
+        writeln("privider: create surface");
         m_surface = m_surfaceProvider.createSurface(m_vkInstance);
 
         // グラフィクスキューがこのサーフェースにPresentを発行できるか
         VkBool32 present = VK_FALSE;
-        vkGetPhysicalDeviceSurfaceSupportKHR(
+        enforceVK(vkGetPhysicalDeviceSurfaceSupportKHR(
             m_vkPhysicalDevice,
             m_graphicsQueueFamilyIndex,
             m_surface,
             &present
-        );
+        ));
         assert(present != VK_FALSE, "not supported presentation");
     }
 

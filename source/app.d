@@ -10,9 +10,9 @@ import bindbc.loader;
 import erupted;
 
 import common;
-import glfwsurfaceprovider;
 import imagebarrier;
 import vulkancontext;
+import win32surfaceprovider;
 
 interface ISampleApp
 {
@@ -104,7 +104,7 @@ void main()
     assert(window !is null);
     scope(exit) glfwDestroyWindow(window);
 
-    auto surfaceProvider = new GLFWSurfaceProvider(window);
+    auto surfaceProvider = new Win32SurfaceProvider(window);
 
     auto vulkanCtx = VulkanContext.get();
     scope(exit) vulkanCtx.cleanup();
@@ -113,6 +113,7 @@ void main()
     writeln("recreate swapchain");
     vulkanCtx.recreateSwapchain();
 
+    writeln("create app");
     auto theApp = new TriangleApp;
     writeln("initialize app");
     theApp.onInitialize();
