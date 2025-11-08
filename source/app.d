@@ -100,9 +100,6 @@ void main()
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 	// vulkan initialization.
-	import erupted.vulkan_lib_loader : loadGlobalLevelFunctions;
-	loadGlobalLevelFunctions();
-
     auto window = glfwCreateWindow(1280, 780, "", null, null);
     assert(window !is null);
     scope(exit) glfwDestroyWindow(window);

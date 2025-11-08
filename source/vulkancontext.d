@@ -162,6 +162,9 @@ public:
 private:
     void createInstance(const(char)* appName)
     {
+        import erupted.vulkan_lib_loader : loadGlobalLevelFunctions;
+	    loadGlobalLevelFunctions();
+
         VkApplicationInfo appInfo;
         appInfo.pApplicationName = appName;
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -190,6 +193,7 @@ private:
         createInfo.ppEnabledLayerNames = layerList.ptr;
 
         enforceVK(vkCreateInstance(&createInfo, null, &m_vkInstance));
+        loadInstanceLevelFunctionsExt(m_vkInstance);
     }
 
     void pickPhysicalDevice()
@@ -214,7 +218,7 @@ private:
         m_graphicsQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         foreach (i, const ref props; queues)
         {
-            if (props.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+            if ((props.queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0)
             {
                 m_graphicsQueueFamilyIndex = cast(uint) i;
             }
@@ -245,6 +249,8 @@ private:
         writeln("vkCreateDevice");
         enforceVK(vkCreateDevice(m_vkPhysicalDevice, &deviceInfo, null, &m_vkDevice));
         assert(m_vkDevice !is null);
+
+        loadDeviceLevelFunctionsExtI(m_vkInstance);
 
         writeln("vkGetDeviceQueue");
         vkGetDeviceQueue(m_vkDevice, m_graphicsQueueFamilyIndex, 0, &m_graphicsQueue);
