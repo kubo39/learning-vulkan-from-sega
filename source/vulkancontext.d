@@ -3,7 +3,6 @@ module vulkancontext;
 version(Windows) import core.sys.windows.windows;
 import core.stdc.stdio : printf, snprintf;
 import std.concurrency : initOnce;
-import std.stdio;
 
 import erupted;
 
@@ -35,9 +34,7 @@ public:
         createInstance(appName);
         common.loadInstanceLevelFunctions(m_vkInstance);
         pickPhysicalDevice();
-        writeln("get device");
         createLogicalDevice();
-        writeln("create command pool");
         createCommandPool();
     }
 
@@ -246,13 +243,11 @@ private:
         deviceInfo.pNext = &m_physDevFeatures;
         deviceInfo.pEnabledFeatures = null;
 
-        writeln("vkCreateDevice");
         enforceVK(vkCreateDevice(m_vkPhysicalDevice, &deviceInfo, null, &m_vkDevice));
         assert(m_vkDevice !is null);
 
         loadDeviceLevelFunctionsExtI(m_vkInstance);
 
-        writeln("vkGetDeviceQueue");
         vkGetDeviceQueue(m_vkDevice, m_graphicsQueueFamilyIndex, 0, &m_graphicsQueue);
     }
 
@@ -283,12 +278,12 @@ private:
 
         // グラフィクスキューがこのサーフェースにPresentを発行できるか
         VkBool32 present = VK_FALSE;
-        vkGetPhysicalDeviceSurfaceSupportKHR(
+        enforceVK(vkGetPhysicalDeviceSurfaceSupportKHR(
             m_vkPhysicalDevice,
             m_graphicsQueueFamilyIndex,
             m_surface,
             &present
-        );
+        ));
         assert(present != VK_FALSE, "not supported presentation");
     }
 

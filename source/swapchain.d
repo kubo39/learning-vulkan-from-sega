@@ -19,7 +19,7 @@ public:
         auto surface = vulkanCtx.getSurface();
 
         VkSurfaceCapabilitiesKHR caps;
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vkPhysicalDevice, surface, &caps);
+        enforceVK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vkPhysicalDevice, surface, &caps));
         VkExtent2D extent = caps.currentExtent;
         if (extent.width == uint.max)
         {
@@ -28,13 +28,13 @@ public:
         }
 
         uint count;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(
+        enforceVK(vkGetPhysicalDeviceSurfaceFormatsKHR(
             vkPhysicalDevice, surface, &count, null
-        );
+        ));
         auto formats = new VkSurfaceFormatKHR[](count);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(
+        enforceVK(vkGetPhysicalDeviceSurfaceFormatsKHR(
             vkPhysicalDevice, surface, &count, formats.ptr
-        );
+        ));
 
         VkSurfaceFormatKHR format = formats[0];
         foreach (surfaceFormat; formats)
@@ -70,7 +70,7 @@ public:
         info.oldSwapchain = m_swapchain;
 
         // GPUがidle状態になってからswapchainの(再)作成
-        vkDeviceWaitIdle(vkDevice);
+        enforceVK(vkDeviceWaitIdle(vkDevice));
 
         VkSwapchainKHR swapchain;
         enforceVK(vkCreateSwapchainKHR(vkDevice, &info, null, &swapchain));
