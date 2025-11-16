@@ -195,8 +195,8 @@ public:
             vkDestroySwapchainKHR(vkDevice, m_swapchain, null);
             m_swapchain = null;
         }
-        m_images = [];
-        m_imageViews = [];
+        m_images.clear();
+        m_imageViews.clear();
     }
 
 private:
@@ -230,12 +230,12 @@ private:
             vkDestroySemaphore(vkDevice, frame.presentComplete, null);
             vkDestroySemaphore(vkDevice, frame.renderComplete, null);
         }
-        m_frames = [];
+        m_frames.clear();
         foreach (sem; m_presentSemaphoreList)
         {
             vkDestroySemaphore(vkDevice, sem, null);
         }
-        m_presentSemaphoreList = [];
+        m_presentSemaphoreList.clear();
     }
 
     VkSwapchainKHR m_swapchain;

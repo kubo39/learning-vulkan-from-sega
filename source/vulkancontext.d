@@ -323,7 +323,7 @@ private:
         {
             vkDestroyFence(m_vkDevice, frame.inflightFence, null);
         }
-        m_frameContext = [];
+        m_frameContext.clear();
     }
 
     void createDebugMessenger()

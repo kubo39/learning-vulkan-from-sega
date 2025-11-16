@@ -33,3 +33,9 @@ alias PFN_vkSetDebugUtilsObjectNameEXT = VkResult function(
     VkInstance, VkDebugUtilsObjectNameEXT*
 );
 */
+
+void clear(T)(ref T[] arr)
+{
+    arr.length = 0;
+    arr.destroy!false(); // this doesn't initiate a GC cycle or free any GC memory.
+}
