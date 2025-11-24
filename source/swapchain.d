@@ -186,6 +186,8 @@ public:
     {
         auto vulkanCtx = VulkanContext.get();
         auto vkDevice = vulkanCtx.getVkDevice();
+        destroyFrameContext();
+
         foreach (view; m_imageViews)
         {
             vkDestroyImageView(vkDevice, view, null);
