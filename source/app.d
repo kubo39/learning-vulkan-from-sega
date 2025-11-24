@@ -10,9 +10,9 @@ import bindbc.loader;
 import erupted;
 
 import common;
-import glfwsurfaceprovider;
 import imagebarrier;
 import vulkancontext;
+import win32surfaceprovider;
 
 interface ISampleApp
 {
@@ -92,6 +92,7 @@ void main()
     {
         const rc = loadGLFW("lib/glfw3.dll");
         assert(rc == glfwSupport);
+        assert(loadGLFW_Windows);
     }
     assert(glfwInit() != 0);
     scope (exit) glfwTerminate();
@@ -104,17 +105,14 @@ void main()
     assert(window !is null);
     scope(exit) glfwDestroyWindow(window);
 
-    auto surfaceProvider = new GLFWSurfaceProvider(window);
+    auto surfaceProvider = new Win32SurfaceProvider(window);
 
     auto vulkanCtx = VulkanContext.get();
     scope(exit) vulkanCtx.cleanup();
-    writeln("initialize vulkan context");
     vulkanCtx.initialize("Triangle", surfaceProvider);
-    writeln("recreate swapchain");
     vulkanCtx.recreateSwapchain();
 
     auto theApp = new TriangleApp;
-    writeln("initialize app");
     theApp.onInitialize();
     scope(exit) theApp.onCleanup();
 
