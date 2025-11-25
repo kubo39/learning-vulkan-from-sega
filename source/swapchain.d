@@ -37,7 +37,7 @@ public:
         ));
 
         VkSurfaceFormatKHR format = formats[0];
-        foreach (surfaceFormat; formats)
+        foreach (ref surfaceFormat; formats)
         {
             if (surfaceFormat.colorSpace != VK_COLORSPACE_SRGB_NONLINEAR_KHR)
             {
@@ -83,7 +83,7 @@ public:
         m_images.length = imageCount;
         enforceVK(vkGetSwapchainImagesKHR(vkDevice, m_swapchain, &imageCount, m_images.ptr));
 
-        foreach (i, image; m_images)
+        foreach (i, ref image; m_images)
         {
             VkImageViewCreateInfo imageViewCI = {
                 image: image,
@@ -188,7 +188,7 @@ public:
         auto vkDevice = vulkanCtx.getVkDevice();
         destroyFrameContext();
 
-        foreach (view; m_imageViews)
+        foreach (ref view; m_imageViews)
         {
             vkDestroyImageView(vkDevice, view, null);
         }
@@ -207,7 +207,7 @@ private:
         auto vulkanCtx = VulkanContext.get();
         auto vkDevice = vulkanCtx.getVkDevice();
         m_frames.length = m_images.length;
-        foreach (frame; m_frames)
+        foreach (ref frame; m_frames)
         {
             VkSemaphoreCreateInfo semCI;
             enforceVK(vkCreateSemaphore(vkDevice, &semCI, null, &frame.renderComplete));
@@ -227,13 +227,13 @@ private:
     {
         auto vulkanCtx = VulkanContext.get();
         auto vkDevice = vulkanCtx.getVkDevice();
-        foreach (frame; m_frames)
+        foreach (ref frame; m_frames)
         {
             vkDestroySemaphore(vkDevice, frame.presentComplete, null);
             vkDestroySemaphore(vkDevice, frame.renderComplete, null);
         }
         m_frames.clear();
-        foreach (sem; m_presentSemaphoreList)
+        foreach (ref sem; m_presentSemaphoreList)
         {
             vkDestroySemaphore(vkDevice, sem, null);
         }

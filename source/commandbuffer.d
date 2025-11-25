@@ -2,6 +2,7 @@ module commandbuffer;
 
 import erupted;
 
+import common;
 import imagebarrier;
 import vulkancontext;
 
@@ -17,7 +18,7 @@ class CommandBuffer
         VkCommandBufferBeginInfo beginInfo = {
             flags: usageFlag
         };
-        vkBeginCommandBuffer(m_commandBuffer, &beginInfo);
+        enforceVK(vkBeginCommandBuffer(m_commandBuffer, &beginInfo));
     }
 
     void end()
@@ -41,6 +42,23 @@ class CommandBuffer
         ImageLayoutTransition transition
     )
     {
+        VkImageMemoryBarrier imageBarrier = {
+            srcAccessMask: transition.srcAccessMask,
+            dstAccessMask: transition.dstAccessMask,
+            oldLayout: transition.oldLayout,
+            newLayout: transition.newLayout,
+            srcQueueFamilyIndex: VK_QUEUE_FAMILY_IGNORED,
+            dstQueueFamilyIndex: VK_QUEUE_FAMILY_IGNORED,
+            image: image,
+            subresourceRange: range,
+        };
+
+        vkCmdPipelineBarrier(
+            m_commandBuffer,
+            transition.srcStage, transition.dstStage,
+            0, 0, null, 0, null, 1, &imageBarrier
+        );
+        /*
         VkImageMemoryBarrier2 imageBarrier = {
             srcStageMask: transition.srcStage,
             srcAccessMask: transition.srcAccessMask,
@@ -59,6 +77,7 @@ class CommandBuffer
             pImageMemoryBarriers: &imageBarrier,
         };
         vkCmdPipelineBarrier2(m_commandBuffer, &dependencyInfo);
+        */
     }
 
 private:

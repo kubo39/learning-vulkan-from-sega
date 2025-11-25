@@ -50,6 +50,10 @@ class TriangleApp : ISampleApp
             baseArrayLayer: 0,
             layerCount: 1,
         };
+        commandBuffer.transitionLayout(
+            swapchain.getCurrentImage(), range,
+            ImageLayoutTransition.fromUndefinedToColorAttachment()
+        );
 
         auto imageView = swapchain.getCurrentView();
         auto extent = swapchain.getExtent();

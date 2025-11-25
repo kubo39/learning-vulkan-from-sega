@@ -53,6 +53,9 @@ public:
         auto width = m_surfaceProvider.getFrameBufferWidth();
         auto height = m_surfaceProvider.getFrameBufferHeight();
         m_swapchain.recreate(width, height);
+
+        destroyFrameContexts();
+        createFrameContexts();
     }    
 
     VkPhysicalDevice getVkPhysicalDevice()
@@ -226,6 +229,7 @@ private:
 
         const(char)*[] deviceExtensions = [
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+            VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
         ];
 
         float priority = 1.0;
@@ -246,22 +250,22 @@ private:
         enforceVK(vkCreateDevice(m_vkPhysicalDevice, &deviceInfo, null, &m_vkDevice));
         assert(m_vkDevice !is null);
 
-        loadDeviceLevelFunctionsExtI(m_vkInstance);
+        loadDeviceLevelFunctionsExtD(m_vkDevice);
 
         vkGetDeviceQueue(m_vkDevice, m_graphicsQueueFamilyIndex, 0, &m_graphicsQueue);
     }
 
     void buildVkFeatures()
     {
+        m_vulkan13Features.dynamicRendering = VK_TRUE;
+        m_vulkan13Features.synchronization2 = VK_TRUE;
+
         buildVkExtensionChain(
             m_physDevFeatures,
             m_vulkan11Features, m_vulkan12Features, m_vulkan13Features
         );
 
         vkGetPhysicalDeviceFeatures2(m_vkPhysicalDevice, &m_physDevFeatures);
-
-        m_vulkan13Features.dynamicRendering = VK_TRUE;
-        m_vulkan13Features.synchronization2 = VK_TRUE;
     }
 
     void createCommandPool()
@@ -302,7 +306,7 @@ private:
     void createFrameContexts()
     {
         m_frameContext.length = MAX_INFLIGHT_FRAMES;
-        foreach (frame; m_frameContext)
+        foreach (ref frame; m_frameContext)
         {
             frame.commandBuffer = createCommandBuffer();
             VkFenceCreateInfo fenceCI = {
@@ -314,7 +318,7 @@ private:
 
     void destroyFrameContexts()
     {
-        foreach (frame; m_frameContext)
+        foreach (ref frame; m_frameContext)
         {
             vkDestroyFence(m_vkDevice, frame.inflightFence, null);
         }
