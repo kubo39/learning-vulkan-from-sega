@@ -58,26 +58,6 @@ class CommandBuffer
             transition.srcStage, transition.dstStage,
             0, 0, null, 0, null, 1, &imageBarrier
         );
-        /*
-        VkImageMemoryBarrier2 imageBarrier = {
-            srcStageMask: transition.srcStage,
-            srcAccessMask: transition.srcAccessMask,
-            dstStageMask: transition.dstStage,
-            dstAccessMask: transition.dstAccessMask,
-            oldLayout: transition.oldLayout,
-            newLayout: transition.newLayout,
-            srcQueueFamilyIndex: VK_QUEUE_FAMILY_IGNORED,
-            dstQueueFamilyIndex: VK_QUEUE_FAMILY_IGNORED,
-            image: image,
-            subresourceRange: range,
-        };
-
-        VkDependencyInfo dependencyInfo = {
-            imageMemoryBarrierCount: 1,
-            pImageMemoryBarriers: &imageBarrier,
-        };
-        vkCmdPipelineBarrier2(m_commandBuffer, &dependencyInfo);
-        */
     }
 
 private:

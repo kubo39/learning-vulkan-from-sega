@@ -58,24 +58,60 @@ class TriangleApp : ISampleApp
         auto imageView = swapchain.getCurrentView();
         auto extent = swapchain.getExtent();
 
-        VkRenderingAttachmentInfo colorAttachment = {
-            imageView: imageView,
-            imageLayout: VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-            loadOp: VK_ATTACHMENT_LOAD_OP_CLEAR,
-            storeOp: VK_ATTACHMENT_STORE_OP_STORE,
-            clearValue: VkClearValue(
-                VkClearColorValue([0.6f, 0.2f, 0.3f, 1.0f])
-            ),
-        };
-        VkRenderingInfo renderingInfo = {
-            renderArea: VkRect2D(VkOffset2D(0, 0), extent),
-            layerCount: 1,
-            colorAttachmentCount: 1,
-            pColorAttachments: &colorAttachment
-        };
-        vkCmdBeginRendering(commandBuffer.get(), &renderingInfo);
+        VkAttachmentDescription[1] attachments;
+	    with (attachments[0])
+	    {
+		    format = swapchain.getImageFormat.format;
+		    samples = VK_SAMPLE_COUNT_1_BIT;
+		    loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		    storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		    stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		    stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		    initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		    finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	    }
 
-        vkCmdEndRendering(commandBuffer.get());
+	    VkAttachmentReference colorAttachment = {
+		    attachment: 0,
+		    layout: VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+	    };
+	    VkSubpassDescription subpass = {
+		    pipelineBindPoint: VK_PIPELINE_BIND_POINT_GRAPHICS,
+		    colorAttachmentCount: 1,
+		    pColorAttachments: &colorAttachment,
+	    };
+
+	    VkSubpassDependency dependency = {
+		    srcSubpass: VK_SUBPASS_EXTERNAL,
+		    dstSubpass: 0,
+		    srcStageMask: VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+		    srcAccessMask: 0,
+		    dstStageMask: VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+		    dstAccessMask: VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+	    };
+
+	    VkRenderPassCreateInfo renderPassCI = {
+		    attachmentCount: 1,
+		    pAttachments: attachments.ptr,
+		    subpassCount: 1,
+		    pSubpasses: &subpass,
+		    dependencyCount: 1,
+		    pDependencies: &dependency,
+        };
+        VkRenderPass renderPass;
+        enforceVK(vkCreateRenderPass(device, &renderPassCI, null, &renderPass));
+
+        auto clearColor = VkClearValue(VkClearColorValue([0.6f, 0.2f, 0.3f, 1.0f]));
+        VkRenderPassBeginInfo passBeginInfo = {
+            renderPass: renderPass,
+            renderArea: VkRect2D(VkOffset2D(0, 0), extent),
+            clearValueCount: 1,
+            pClearValues: &clearColor,
+        };
+
+        writeln("vkCmdBeginRenderPass");
+        vkCmdBeginRenderPass(commandBuffer.get(), &passBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdEndRenderPass(commandBuffer.get());
 
         // 表示用レイアウト変更
         commandBuffer.transitionLayout(

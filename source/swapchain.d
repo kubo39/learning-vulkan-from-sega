@@ -157,6 +157,11 @@ public:
         return vkQueuePresentKHR(queuePresent, &presentInfo);
     }
 
+    VkSurfaceFormatKHR getImageFormat()
+    {
+        return m_imageFormat;
+    }
+
     VkExtent2D getExtent()
     {
         return m_imageExtent;

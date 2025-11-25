@@ -174,7 +174,7 @@ private:
 
         const(char)*[] extensionList = [
             VK_KHR_SURFACE_EXTENSION_NAME,
-		    VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
+            VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
         ];
         const(char)*[] layerList = [
             "VK_LAYER_KHRONOS_validation"
@@ -228,8 +228,7 @@ private:
         buildVkFeatures();
 
         const(char)*[] deviceExtensions = [
-            VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-            VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME
         ];
 
         float priority = 1.0;
@@ -257,9 +256,6 @@ private:
 
     void buildVkFeatures()
     {
-        m_vulkan13Features.dynamicRendering = VK_TRUE;
-        m_vulkan13Features.synchronization2 = VK_TRUE;
-
         buildVkExtensionChain(
             m_physDevFeatures,
             m_vulkan11Features, m_vulkan12Features, m_vulkan13Features
