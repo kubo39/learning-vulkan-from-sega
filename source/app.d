@@ -30,6 +30,8 @@ class TriangleApp : ISampleApp
         auto vulkanCtx = VulkanContext.get();
         auto swapchain = vulkanCtx.getSwapchain();
         auto device = vulkanCtx.getVkDevice();
+        auto vkCmdBeginRenderingKHR = vulkanCtx.getBeginRenderingKHR();
+        auto vkCmdEndRenderingKHR = vulkanCtx.getEndRenderingKHR();
 
         if (vulkanCtx.acquireNextImage() != VK_SUCCESS)
         {
@@ -58,7 +60,7 @@ class TriangleApp : ISampleApp
         auto imageView = swapchain.getCurrentView();
         auto extent = swapchain.getExtent();
 
-        VkRenderingAttachmentInfo colorAttachment = {
+        VkRenderingAttachmentInfoKHR colorAttachment = {
             imageView: imageView,
             imageLayout: VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
             loadOp: VK_ATTACHMENT_LOAD_OP_CLEAR,
@@ -67,20 +69,20 @@ class TriangleApp : ISampleApp
                 VkClearColorValue([0.6f, 0.2f, 0.3f, 1.0f])
             ),
         };
-        VkRenderingInfo renderingInfo = {
+        VkRenderingInfoKHR renderingInfo = {
             renderArea: VkRect2D(VkOffset2D(0, 0), extent),
             layerCount: 1,
             colorAttachmentCount: 1,
             pColorAttachments: &colorAttachment
         };
-        vkCmdBeginRendering(commandBuffer.get(), &renderingInfo);
 
-        vkCmdEndRendering(commandBuffer.get());
+        vkCmdBeginRenderingKHR(commandBuffer.get(), &renderingInfo);
+        vkCmdEndRenderingKHR(commandBuffer.get());
 
         // 表示用レイアウト変更
         commandBuffer.transitionLayout(
             swapchain.getCurrentImage(), range,
-            ImageLayoutTransition.fromUndefinedToColorAttachment()
+            ImageLayoutTransition.fromColorToPresent()
         );
         commandBuffer.end();
 

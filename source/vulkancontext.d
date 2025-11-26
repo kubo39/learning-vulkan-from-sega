@@ -4,7 +4,12 @@ version(Windows) import core.sys.windows.windows;
 import core.stdc.stdio : printf, snprintf;
 import std.concurrency : initOnce;
 
+import std.stdio;
+
 import erupted;
+
+alias PFN_vkCmdBeginRenderingKHR = PFN_vkCmdBeginRendering;
+alias PFN_vkCmdEndRenderingKHR = PFN_vkCmdEndRendering;
 
 import commandbuffer;
 import common;
@@ -86,6 +91,16 @@ public:
     FrameContext getCurrentFrameContext()
     {
         return m_frameContext[m_currentFrameIndex];
+    }
+
+    PFN_vkCmdBeginRenderingKHR getBeginRenderingKHR()
+    {
+        return m_pfnCmdBeginRenderingKHR;
+    }
+
+    PFN_vkCmdEndRenderingKHR getEndRenderingKHR()
+    {
+        return m_pfnCmdEndRenderingKHR;
     }
 
     VkResult acquireNextImage()
@@ -170,7 +185,7 @@ private:
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.pEngineName = "VulkanBookEngine".ptr;
         appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.apiVersion = VK_API_VERSION_1_3;
+        appInfo.apiVersion = VK_API_VERSION_1_2;
 
         const(char)*[] extensionList = [
             VK_KHR_SURFACE_EXTENSION_NAME,
@@ -208,6 +223,18 @@ private:
         vkGetPhysicalDeviceProperties(m_vkPhysicalDevice, &m_physicalDeviceProperties);
     }
 
+    // eruptedはvkCmdBeginRenderingKHRの定義をvulkan 1.3の機能であるvkCmdBeginRenderingの
+    // エイリアスで定義しているため、Vulkan 1.3をサポートしていない環境では使えない。
+    // そのため自前で関数ポインタをロードしている。
+    // https://github.com/ParticlePeter/ErupteD/blob/1b3c80c49ebbeafc48252b61652644ff0c6dab91/source/erupted/dispatch_device.d#L1941-L1943
+    void loadDynamicRenderingFunctions()
+    {
+        m_pfnCmdBeginRenderingKHR = cast(PFN_vkCmdBeginRenderingKHR)
+            vkGetDeviceProcAddr(m_vkDevice, "vkCmdBeginRenderingKHR");
+        m_pfnCmdEndRenderingKHR = cast(PFN_vkCmdEndRenderingKHR)
+            vkGetDeviceProcAddr(m_vkDevice, "vkCmdEndRenderingKHR");
+    }
+
     void createLogicalDevice()
     {
         uint queueCount;
@@ -229,7 +256,7 @@ private:
 
         const(char)*[] deviceExtensions = [
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-            VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
+            VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
         ];
 
         float priority = 1.0;
@@ -253,18 +280,17 @@ private:
         loadDeviceLevelFunctionsExtD(m_vkDevice);
 
         vkGetDeviceQueue(m_vkDevice, m_graphicsQueueFamilyIndex, 0, &m_graphicsQueue);
+
+        loadDynamicRenderingFunctions();
     }
 
     void buildVkFeatures()
     {
-        m_vulkan13Features.dynamicRendering = VK_TRUE;
-        m_vulkan13Features.synchronization2 = VK_TRUE;
-
         buildVkExtensionChain(
             m_physDevFeatures,
-            m_vulkan11Features, m_vulkan12Features, m_vulkan13Features
+            m_dynamicRenderingFeatures,
+            m_vulkan11Features, m_vulkan12Features
         );
-
         vkGetPhysicalDeviceFeatures2(m_vkPhysicalDevice, &m_physDevFeatures);
     }
 
@@ -353,6 +379,9 @@ private:
 */
     }
 
+    PFN_vkCmdBeginRenderingKHR m_pfnCmdBeginRenderingKHR;
+    PFN_vkCmdEndRenderingKHR m_pfnCmdEndRenderingKHR;
+
     ISurfaceProvider m_surfaceProvider;
     VkInstance m_vkInstance;
 
@@ -376,19 +405,19 @@ private:
     uint m_currentFrameIndex = 0;
 
     VkPhysicalDeviceFeatures2 m_physDevFeatures;
+    VkPhysicalDeviceDynamicRenderingFeaturesKHR m_dynamicRenderingFeatures;
     VkPhysicalDeviceVulkan11Features m_vulkan11Features;
     VkPhysicalDeviceVulkan12Features m_vulkan12Features;
-    VkPhysicalDeviceVulkan13Features m_vulkan13Features;
 }
 
 private:
 
-void buildVkExtensionChain(T)(T last)
+void buildVkExtensionChain(T)(ref T last)
 {
     last.pNext = null;
 }
 
-void buildVkExtensionChain(T, U, Rest...)(T current, U next, Rest rest)
+void buildVkExtensionChain(T, U, Rest...)(ref T current, ref U next, ref Rest rest)
 {
     current.pNext = &next;
     buildVkExtensionChain(next, rest);
