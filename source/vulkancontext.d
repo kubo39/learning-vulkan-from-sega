@@ -275,6 +275,7 @@ private:
         const(char)*[] deviceExtensions = [
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
             VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+            VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
         ];
 
         float priority = 1.0;
@@ -307,7 +308,8 @@ private:
         buildVkExtensionChain(
             m_physDevFeatures,
             m_dynamicRenderingFeatures,
-            m_vulkan11Features, m_vulkan12Features
+            m_vulkan11Features, m_vulkan12Features,
+            m_sync2Features
         );
         vkGetPhysicalDeviceFeatures2(m_vkPhysicalDevice, &m_physDevFeatures);
 
@@ -434,6 +436,7 @@ private:
     VkPhysicalDeviceDynamicRenderingFeaturesKHR m_dynamicRenderingFeatures;
     VkPhysicalDeviceVulkan11Features m_vulkan11Features;
     VkPhysicalDeviceVulkan12Features m_vulkan12Features;
+    VkPhysicalDeviceSynchronization2FeaturesKHR m_sync2Features;
 }
 
 private:

@@ -6,11 +6,14 @@ import common;
 import imagebarrier;
 import vulkancontext;
 
+private alias PFN_vkCmdPipelineBarrier2KHR = PFN_vkCmdPipelineBarrier2;
+
 class CommandBuffer
 {
     this(VkCommandBuffer commandBuffer)
     {
         m_commandBuffer = commandBuffer;
+        loadCmdPipelineBarrierFunctions();
     }
 
     void begin(VkCommandBufferUsageFlags usageFlag = 0)
@@ -42,8 +45,10 @@ class CommandBuffer
         ImageLayoutTransition transition
     )
     {
-        VkImageMemoryBarrier imageBarrier = {
+        VkImageMemoryBarrier2KHR imageBarrier = {
+            srcStageMask: transition.srcStage,
             srcAccessMask: transition.srcAccessMask,
+            dstStageMask: transition.dstStage,
             dstAccessMask: transition.dstAccessMask,
             oldLayout: transition.oldLayout,
             newLayout: transition.newLayout,
@@ -53,11 +58,11 @@ class CommandBuffer
             subresourceRange: range,
         };
 
-        vkCmdPipelineBarrier(
-            m_commandBuffer,
-            transition.srcStage, transition.dstStage,
-            0, 0, null, 0, null, 1, &imageBarrier
-        );
+        VkDependencyInfoKHR dependencyInfo = {
+            imageMemoryBarrierCount: 1,
+            pImageMemoryBarriers: &imageBarrier,
+        };
+        m_pfnCmdPipelineBarrier2KHR(m_commandBuffer, &dependencyInfo);
     }
 
 private:
@@ -73,5 +78,18 @@ private:
         m_commandBuffer = null;
     }
 
+    // eruptedはvkCmdPipelineBarrier2KHRの定義をvulkan 1.3の機能である
+    // vkCmdPipelineBarrier2のエイリアスで定義しているため、Vulkan 1.3を
+    // サポートしていない環境では使えない。
+    // そのため自前で関数ポインタをロードしている。
+    void loadCmdPipelineBarrierFunctions()
+    {
+        auto vulkanCtx = VulkanContext.get();
+        auto vkDevice = vulkanCtx.getVkDevice();
+        m_pfnCmdPipelineBarrier2KHR = cast(PFN_vkCmdPipelineBarrier2KHR)
+            vkGetDeviceProcAddr(vkDevice, "vkCmdPipelineBarrier2KHR");
+    }
+
     VkCommandBuffer m_commandBuffer;
+    PFN_vkCmdPipelineBarrier2KHR m_pfnCmdPipelineBarrier2KHR;
 }
