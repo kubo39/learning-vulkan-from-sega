@@ -257,6 +257,7 @@ private:
         const(char)*[] deviceExtensions = [
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
             VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+            VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
         ];
 
         float priority = 1.0;
