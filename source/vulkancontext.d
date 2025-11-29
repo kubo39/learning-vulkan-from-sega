@@ -292,6 +292,14 @@ private:
             m_vulkan11Features, m_vulkan12Features
         );
         vkGetPhysicalDeviceFeatures2(m_vkPhysicalDevice, &m_physDevFeatures);
+
+        // ドライバがrobustBufferAccessUpdateAfterBindをサポートしていないので
+        // descriptorbinding*UpdateAfterBindを無効化
+        // FIXME: 必要に応じてrobustBufferAccessをVK_FALSEにするかもしれない
+        m_vulkan12Features.descriptorBindingUniformBufferUpdateAfterBind = VK_FALSE;
+        m_vulkan12Features.descriptorBindingStorageBufferUpdateAfterBind = VK_FALSE;
+        m_vulkan12Features.descriptorBindingUniformTexelBufferUpdateAfterBind = VK_FALSE;
+        m_vulkan12Features.descriptorBindingStorageTexelBufferUpdateAfterBind = VK_FALSE;
     }
 
     void createCommandPool()
