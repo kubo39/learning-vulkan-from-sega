@@ -182,6 +182,11 @@ public:
         return m_frames[m_currentIndex].renderComplete;
     }
 
+    VkSurfaceFormatKHR getFormat()
+    {
+        return m_imageFormat;
+    }
+
     void cleanup()
     {
         auto vulkanCtx = VulkanContext.get();
