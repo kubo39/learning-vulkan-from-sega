@@ -3,6 +3,7 @@
 	"versions": {
 		"bindbc-glfw": "1.1.1",
 		"bindbc-loader": "1.1.5",
-		"erupted": "2.1.98+v1.3.248"
+		"erupted": "2.1.98+v1.3.248",
+		"gl3n": "1.4.1"
 	}
 }
