@@ -1,5 +1,7 @@
 module app;
 
+import core.stdc.string : memcpy;
+
 import core.thread;
 import core.time;
 
@@ -8,7 +10,9 @@ import std.stdio;
 import bindbc.glfw;
 import bindbc.loader;
 import erupted;
+import gl3n.linalg;
 
+import bufferresource;
 import common;
 import imagebarrier;
 import vulkancontext;
@@ -23,7 +27,18 @@ interface ISampleApp
 
 class TriangleApp : ISampleApp
 {
-    override void onInitialize() {}
+public:
+    struct Vertex
+    {
+        vec3 position;
+        vec3 color;
+    }
+
+    override void onInitialize()
+    {
+        initializeTriangleVertexBuffer();
+        initializeGraphicsPipeline();
+    }
 
     override void onDrawFrame()
     {
@@ -89,7 +104,45 @@ class TriangleApp : ISampleApp
         vulkanCtx.submitPresent();
     }
 
-    override void onCleanup() {}
+    override void onCleanup()
+    {
+        auto vulkanCtx = VulkanContext.get();
+        auto device = vulkanCtx.getVkDevice();
+
+        device.vkDeviceWaitIdle();
+        if (m_pipeline !is null)
+        {
+            vkDestroyPipeline(device, m_pipeline, null);
+        }
+        if (m_pipelineLayout !is null)
+        {
+            vkDestroyPipelineLayout(device, m_pipelineLayout, null);
+        }
+    }
+
+private:
+    void initializeTriangleVertexBuffer()
+    {
+        Vertex[] triangleVertices = [
+            Vertex(vec3(-0.5f, -0.5f, 0.0f), vec3(1.0f, 0.0f, 0.0f)),  // 赤
+            Vertex(vec3( 0.5f, -0.5f, 0.0f), vec3(0.0f, 1.0f, 0.0f)),  // 緑
+            Vertex(vec3( 0.0f,  0.5f, 0.0f), vec3(0.0f, 0.0f, 1.0f)),  // 青
+        ];
+        VkDeviceSize bufferSize = triangleVertices.length * Vertex.sizeof;
+        m_vertexBuffer = VertexBuffer.create(
+            bufferSize,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+        );
+        void* p = m_vertexBuffer.map();
+        memcpy(p, triangleVertices.ptr, bufferSize);
+        m_vertexBuffer.unmap();
+    }
+
+    void initializeGraphicsPipeline() {}
+
+    VertexBuffer m_vertexBuffer;
+    VkPipeline m_pipeline;
+    VkPipelineLayout m_pipelineLayout;
 }
 
 void main()

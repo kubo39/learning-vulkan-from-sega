@@ -149,6 +149,24 @@ public:
         m_currentFrameIndex = (m_currentFrameIndex + 1) % MAX_INFLIGHT_FRAMES;
     }
 
+    uint findMemoryType(
+        const VkMemoryRequirements requirements,
+        const VkMemoryPropertyFlags properties
+    )
+    {
+        foreach (i; 0 .. m_memoryProperties.memoryTypeCount)
+        {
+            bool isTypeCompatible = (requirements.memoryTypeBits & (1 << i)) != 0;
+            bool hasDesiredProperties =
+                (m_memoryProperties.memoryTypes[i].propertyFlags & properties) == properties;
+            if (isTypeCompatible && hasDesiredProperties)
+            {
+                return cast(uint) i;
+            }
+        }
+        assert(false, "Failed to find suitable memory type!");
+    }
+
     void cleanup()
     {
         // デバイスがidle状態になってから破棄
