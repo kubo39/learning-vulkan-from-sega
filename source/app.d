@@ -161,7 +161,6 @@ private:
             vkDevice, &layoutInfo, null, &m_pipelineLayout)
         );
 
-        writeln("assetPath: ", getAssetPath(AssetType.Shader, "triangle.vert.spv"));
         VkShaderModule vertShaderModule = loadShaderModule(
             getAssetPath(AssetType.Shader, "triangle.vert.spv")
         );

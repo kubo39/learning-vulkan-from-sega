@@ -1,6 +1,5 @@
 module graphicspipelinebuilder;
 
-import std.stdio;
 import std.string : toStringz;
 
 import erupted;
@@ -79,7 +78,7 @@ public:
         VkGraphicsPipelineCreateInfo graphicsPipelineCI = {
             pNext: null,
             flags: 0,
-            stageCount: 2,
+            stageCount: cast(uint) m_shaderStages.length,
             pStages: m_shaderStages.ptr,
             pVertexInputState: &m_vertexInputState,
             pInputAssemblyState: &m_inputAssemblyState,
