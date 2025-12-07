@@ -1,5 +1,7 @@
 module app;
 
+import core.stdc.string : memcpy;
+
 import core.thread;
 import core.time;
 
@@ -8,9 +10,14 @@ import std.stdio;
 import bindbc.glfw;
 import bindbc.loader;
 import erupted;
+import gl3n.linalg;
 
+import assetpath;
+import bufferresource;
 import common;
+import graphicspipelinebuilder;
 import imagebarrier;
+import shaderloader;
 import vulkancontext;
 import win32surfaceprovider;
 
@@ -23,7 +30,18 @@ interface ISampleApp
 
 class TriangleApp : ISampleApp
 {
-    override void onInitialize() {}
+public:
+    struct Vertex
+    {
+        vec3 position;
+        vec3 color;
+    }
+
+    override void onInitialize()
+    {
+        initializeTriangleVertexBuffer();
+        initializeGraphicsPipeline();
+    }
 
     override void onDrawFrame()
     {
@@ -77,6 +95,14 @@ class TriangleApp : ISampleApp
         };
 
         vkCmdBeginRenderingKHR(commandBuffer.get(), &renderingInfo);
+
+        // 三角形の描画
+        vkCmdBindPipeline(commandBuffer.get(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+        auto vb = m_vertexBuffer.getVkBuffer();
+        VkDeviceSize[] offsets = [0];
+        vkCmdBindVertexBuffers(commandBuffer.get(), 0, 1, &vb, offsets.ptr);
+        vkCmdDraw(commandBuffer.get(), 3, 1, 0, 0);
+
         vkCmdEndRenderingKHR(commandBuffer.get());
 
         // 表示用レイアウト変更
@@ -89,7 +115,119 @@ class TriangleApp : ISampleApp
         vulkanCtx.submitPresent();
     }
 
-    override void onCleanup() {}
+    override void onCleanup()
+    {
+        auto vulkanCtx = VulkanContext.get();
+        auto device = vulkanCtx.getVkDevice();
+
+        device.vkDeviceWaitIdle();
+        if (m_pipeline !is null)
+        {
+            vkDestroyPipeline(device, m_pipeline, null);
+        }
+        if (m_pipelineLayout !is null)
+        {
+            vkDestroyPipelineLayout(device, m_pipelineLayout, null);
+        }
+        m_vertexBuffer.cleanup();
+    }
+
+private:
+    void initializeTriangleVertexBuffer()
+    {
+        Vertex[] triangleVertices = [
+            Vertex(vec3(-0.5f, -0.5f, 0.0f), vec3(1.0f, 0.0f, 0.0f)),  // 赤
+            Vertex(vec3( 0.5f, -0.5f, 0.0f), vec3(0.0f, 1.0f, 0.0f)),  // 緑
+            Vertex(vec3( 0.0f,  0.5f, 0.0f), vec3(0.0f, 0.0f, 1.0f)),  // 青
+        ];
+        VkDeviceSize bufferSize = triangleVertices.length * Vertex.sizeof;
+        m_vertexBuffer = VertexBuffer.create(
+            bufferSize,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+        );
+        void* p = m_vertexBuffer.map();
+        memcpy(p, triangleVertices.ptr, bufferSize);
+        m_vertexBuffer.unmap();
+    }
+
+    void initializeGraphicsPipeline()
+    {
+        auto vulkanCtx = VulkanContext.get();
+        auto vkDevice = vulkanCtx.getVkDevice();
+        auto swapchain = vulkanCtx.getSwapchain();
+
+        VkPipelineLayoutCreateInfo layoutInfo;
+        enforceVK(vkCreatePipelineLayout(
+            vkDevice, &layoutInfo, null, &m_pipelineLayout)
+        );
+
+        writeln("assetPath: ", getAssetPath(AssetType.Shader, "triangle.vert.spv"));
+        VkShaderModule vertShaderModule = loadShaderModule(
+            getAssetPath(AssetType.Shader, "triangle.vert.spv")
+        );
+        VkShaderModule fragShaderModule = loadShaderModule(
+            getAssetPath(AssetType.Shader, "triangle.frag.spv")
+        );
+
+        VkVertexInputBindingDescription[1] bindingDescriptions = [
+            {
+                stride: Vertex.sizeof,
+                inputRate: VK_VERTEX_INPUT_RATE_VERTEX
+            }
+        ];
+
+        VkVertexInputAttributeDescription[2] attributeDescriptions = [
+            {
+                location: 0,
+                binding: 0,
+                format: VK_FORMAT_R32G32B32_SFLOAT,
+                offset: Vertex.position.offsetof
+            },
+            {
+                location: 1,
+                binding: 0,
+                format: VK_FORMAT_R32G32B32_SFLOAT,
+                offset: Vertex.color.offsetof
+            }
+        ];
+
+        auto builder = new GraphicsPipelineBuilder;
+        builder.addShaderStage(
+            VK_SHADER_STAGE_VERTEX_BIT,
+            vertShaderModule
+        );
+        builder.addShaderStage(
+            VK_SHADER_STAGE_FRAGMENT_BIT,
+            fragShaderModule
+        );
+        builder.setVertexInput(
+            bindingDescriptions.ptr, cast(uint) bindingDescriptions.length,
+            attributeDescriptions.ptr, cast(uint) attributeDescriptions.length
+        );
+        auto swapchainExtent = swapchain.getExtent();
+        auto scissor = VkRect2D(VkOffset2D(0, 0), swapchainExtent);
+        VkViewport viewport = {
+            x: 0,
+            y: 0,
+            width: cast(float) swapchainExtent.width,
+            height: cast(float) swapchainExtent.height,
+            minDepth: 0.0f,
+            maxDepth: 1.0f
+        };
+        builder.setViewport(viewport, scissor);
+        builder.setPipelineLayout(m_pipelineLayout);
+
+        auto colorFormat = swapchain.getFormat.format;
+        builder.useDynamicRendering(colorFormat);
+        m_pipeline = builder.build();
+
+        vkDestroyShaderModule(vkDevice, vertShaderModule, null);
+        vkDestroyShaderModule(vkDevice, fragShaderModule, null);
+    }
+
+    VertexBuffer m_vertexBuffer;
+    VkPipeline m_pipeline;
+    VkPipelineLayout m_pipelineLayout;
 }
 
 void main()

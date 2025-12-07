@@ -14,3 +14,10 @@
 - LDC v1.41.0
   - via [installer.sh](https://github.com/dlang/installer)
   - [7-zip](https://www.7-zip.org/) is required.
+
+## シェーダーのコンパイル
+
+```console
+glslangValidator -V -S vert -o assets/shader/triangle.vert.spv assets/shader/triangle.vert.glsl
+glslangValidator -V -S frag -o assets/shader/triangle.frag.spv assets/shader/triangle.frag.glsl
+```
