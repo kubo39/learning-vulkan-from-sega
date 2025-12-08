@@ -31,7 +31,7 @@ class CommandBuffer
         vkResetCommandBuffer(m_commandBuffer, 0);
     }
 
-    VkCommandBuffer get()
+    VkCommandBuffer opUnary(string s)() if (s == "*")
     {
         return m_commandBuffer;
     }

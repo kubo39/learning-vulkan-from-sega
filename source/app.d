@@ -94,16 +94,16 @@ public:
             pColorAttachments: &colorAttachment
         };
 
-        vkCmdBeginRenderingKHR(commandBuffer.get(), &renderingInfo);
+        vkCmdBeginRenderingKHR(*commandBuffer, &renderingInfo);
 
         // 三角形の描画
-        vkCmdBindPipeline(commandBuffer.get(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+        vkCmdBindPipeline(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
         auto vb = m_vertexBuffer.getVkBuffer();
         VkDeviceSize[] offsets = [0];
-        vkCmdBindVertexBuffers(commandBuffer.get(), 0, 1, &vb, offsets.ptr);
-        vkCmdDraw(commandBuffer.get(), 3, 1, 0, 0);
+        vkCmdBindVertexBuffers(*commandBuffer, 0, 1, &vb, offsets.ptr);
+        vkCmdDraw(*commandBuffer, 3, 1, 0, 0);
 
-        vkCmdEndRenderingKHR(commandBuffer.get());
+        vkCmdEndRenderingKHR(*commandBuffer);
 
         // 表示用レイアウト変更
         commandBuffer.transitionLayout(

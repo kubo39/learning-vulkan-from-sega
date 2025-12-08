@@ -128,7 +128,7 @@ public:
         VkSemaphore renderCompleteSem = m_swapchain.getRenderCompleteSemaphore();
         VkSemaphore presentCompleteSem = m_swapchain.getPresentCompleteSemaphore();
 
-        VkCommandBuffer commandBuffer = frame.commandBuffer.get();
+        VkCommandBuffer commandBuffer = *(frame.commandBuffer);
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
         submitInfo.pWaitDstStageMask = &waitStageMask;
