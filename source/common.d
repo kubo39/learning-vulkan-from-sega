@@ -12,8 +12,6 @@ version(Windows)
     import core.sys.windows.windows;
     import erupted.platform_extensions;
     mixin Platform_Extensions!USE_PLATFORM_WIN32_KHR;
-
-    mixin(bindGLFW_Windows);
 }
 
 void enforceVK(VkResult result)

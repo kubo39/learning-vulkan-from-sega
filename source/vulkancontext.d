@@ -206,9 +206,12 @@ private:
         appInfo.apiVersion = VK_API_VERSION_1_2;
 
         const(char)*[] extensionList = [
-            VK_KHR_SURFACE_EXTENSION_NAME,
-		    VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
+            VK_KHR_SURFACE_EXTENSION_NAME
         ];
+        version(Windows)
+        {
+            extensionList ~= VK_KHR_WIN32_SURFACE_EXTENSION_NAME;
+        }
         const(char)*[] layerList = [
             "VK_LAYER_KHRONOS_validation"
         ];

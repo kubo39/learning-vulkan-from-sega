@@ -16,6 +16,7 @@ public:
 
     VkSurfaceKHR createSurface(VkInstance instance)
     {
+        assert(loadGLFW_Vulkan);
         VkSurfaceKHR surface;
         enforceVK(glfwCreateWindowSurface(instance, m_window, null, &surface));
         return surface;

@@ -15,11 +15,11 @@ import gl3n.linalg;
 import assetpath;
 import bufferresource;
 import common;
+import glfwsurfaceprovider;
 import graphicspipelinebuilder;
 import imagebarrier;
 import shaderloader;
 import vulkancontext;
-import win32surfaceprovider;
 
 interface ISampleApp
 {
@@ -235,8 +235,8 @@ void main()
     {
         const rc = loadGLFW("lib/glfw3.dll");
         assert(rc == glfwSupport);
-        assert(loadGLFW_Windows);
     }
+    assert(loadGLFW_Vulkan);
     assert(glfwInit() != 0);
     scope (exit) glfwTerminate();
     assert(glfwVulkanSupported() != 0);
@@ -248,7 +248,7 @@ void main()
     assert(window !is null);
     scope(exit) glfwDestroyWindow(window);
 
-    auto surfaceProvider = new Win32SurfaceProvider(window);
+    auto surfaceProvider = new GLFWSurfaceProvider(window);
 
     auto vulkanCtx = VulkanContext.get();
     scope(exit) vulkanCtx.cleanup();
