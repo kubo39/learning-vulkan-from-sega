@@ -229,7 +229,7 @@ private:
         createInfo.ppEnabledLayerNames = layerList.ptr;
 
         enforceVK(vkCreateInstance(&createInfo, null, &m_vkInstance));
-        loadInstanceLevelFunctionsExt(m_vkInstance);
+        erupted.loadInstanceLevelFunctions(m_vkInstance);
     }
 
     void pickPhysicalDevice()
@@ -299,7 +299,7 @@ private:
         enforceVK(vkCreateDevice(m_vkPhysicalDevice, &deviceInfo, null, &m_vkDevice));
         assert(m_vkDevice !is null);
 
-        loadDeviceLevelFunctionsExtD(m_vkDevice);
+        erupted.loadDeviceLevelFunctions(m_vkDevice);
 
         vkGetDeviceQueue(m_vkDevice, m_graphicsQueueFamilyIndex, 0, &m_graphicsQueue);
 
